@@ -15,6 +15,13 @@ It can help augment the Data Flow in javelin with
 * Data Store
 * Control Flow
 
+# Testing
+
+```
+$ lein cljsbuild auto
+$ node target/test.js
+```
+
 # Status
 
 Alpha.
