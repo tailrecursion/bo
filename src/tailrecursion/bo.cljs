@@ -2,6 +2,7 @@
 
 (defprotocol IBO
   (add [this object-name object-map])
+  (get-object [this object-name])
   (update! [this object-name object-map])
   (update-in! [this object-name object-keys value])
   (rm [this object-id])
@@ -18,6 +19,7 @@
         (reset! ->objects (assoc (objects this) object-name object-map))
         true)
       false))
+  (get-object [this object-name] (get (objects this) object-name))
   (update! [this object-name object-map]
     (if (get (objects this) object-name)
       (do

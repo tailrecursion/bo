@@ -14,6 +14,21 @@ It can help augment the Data Flow in javelin with
 * Data Store
 * Control Flow
 
+# Protocol
+
+```clojure
+(defprotocol IBO
+  (add [this object-name object-map])
+  (get-object [this object-name])
+  (update! [this object-name object-map])
+  (update-in! [this object-name object-keys value])
+  (rm [this object-id])
+  (objects [this])
+  (by-prop [this meta-info matcher])
+  (trigger [this behavior-name input])
+  (raise [this trigger-name input]))
+```
+
 # Example
 
 ```clojure
@@ -24,6 +39,8 @@ It can help augment the Data Flow in javelin with
 (let [test-bo (bo/BO. (atom {}))]
   (bo/add test-bo :foo {:type :object :bar 1 :behaviors [:blah]})
   (bo/add test-bo :baz {:type :object :car 2 :behaviors [:blah]})
+  (bo/update-in! test-bo :baz [:car] 2)
+  (println (bo/get-object test-bo :baz))
   (bo/add test-bo :blah {:type :behavior :triggers [:some-thing]
                       :action (fn [this input] (println input))})
   (bo/raise test-bo :some-thing 5))
