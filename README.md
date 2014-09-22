@@ -22,7 +22,7 @@ It can help augment the Data Flow in javelin with
   (get-object [this object-name])
   (update! [this object-name object-map])
   (update-in! [this object-name object-keys value])
-  (rm [this object-id])
+  (rm [this object-name])
   (objects [this])
   (by-prop [this meta-info matcher])
   (trigger [this behavior-name input])
