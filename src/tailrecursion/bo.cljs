@@ -3,6 +3,7 @@
 (defprotocol IBO
   (add [this object-name object-map])
   (get-object [this object-name])
+  (get-in-object [this object-name object-keys])
   (update! [this object-name object-map])
   (update-in! [this object-name object-keys value])
   (rm [this object-name])
@@ -20,6 +21,8 @@
         true)
       false))
   (get-object [this object-name] (get (objects this) object-name))
+  (get-in-object [this object-name object-keys]
+    (get-in (get (objects this) object-name) object-keys))
   (update! [this object-name object-map]
     (if (get (objects this) object-name)
       (do
@@ -67,13 +70,14 @@
   (raise [this trigger-name input]
     (loop [left-keys (keys (objects this))]
       (if (not (empty? left-keys))
-        (let [object-map (get (objects this) (first left-keys))]
+        (let [object-name (first left-keys)
+              object-map (get (objects this) object-name)]
           (when (= (get object-map :type) :object)
             (loop [behaviors (get object-map :behaviors)]
               (when (not (empty? behaviors))
                 (let [behavior (get (objects this) (first behaviors))]
                   (if (some #(= trigger-name %) (get behavior :triggers))
-                    (trigger this (first behaviors) input)))
+                    ((get behavior :action) this input object-name)))
                 (recur (rest behaviors))))
             (recur (rest left-keys))))))))
 

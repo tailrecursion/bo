@@ -20,6 +20,7 @@ It can help augment the Data Flow in javelin with
 (defprotocol IBO
   (add [this object-name object-map])
   (get-object [this object-name])
+  (get-in-object [this object-name object-keys])
   (update! [this object-name object-map])
   (update-in! [this object-name object-keys value])
   (rm [this object-name])
@@ -37,13 +38,29 @@ It can help augment the Data Flow in javelin with
 
 (enable-console-print!)
 (let [test-bo (bo/BO. (atom {}))]
-  (bo/add test-bo :foo {:type :object :bar 1 :behaviors [:blah]})
-  (bo/add test-bo :baz {:type :object :car 2 :behaviors [:blah]})
-  (bo/update-in! test-bo :baz [:car] 2)
-  (println (bo/get-object test-bo :baz))
-  (bo/add test-bo :blah {:type :behavior :triggers [:some-thing]
-                      :action (fn [this input] (println input))})
-  (bo/raise test-bo :some-thing 5))
+  (bo/add test-bo :foo {:type :object :data 1 :behaviors [:specific]})
+  (bo/add test-bo :bar {:type :object :data 0 :behaviors [:specific]})
+  (bo/update-in! test-bo :bar [:data] 2)
+  (println (bo/get-in-object test-bo :bar [:data]))
+  (bo/add test-bo :general {:type :behavior
+                            :action (fn [this input]
+                                      (println (str "Input : " input))
+                                      (println (str "Total Objects: " (count (bo/objects this)))))
+                            })
+
+  (bo/add test-bo :specific {:type :behavior
+                             :triggers [:some-transition]
+                             :action (fn [this input object-name] (println input object-name))
+                             })
+  (bo/trigger test-bo :general 42)
+  (bo/raise test-bo :some-transition "Do something with "))
+```
+
+```
+Input : 42
+Total Objects: 4
+Do something with  :foo
+Do something with  :bar
 ```
 
 # Testing
