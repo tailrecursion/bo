@@ -7,7 +7,7 @@ A minimal implementation of LightTable's [BOT Architecture](http://www.chris-gra
 * [Interceptor Pattern](https://en.wikipedia.org/wiki/Interceptor_pattern)
 * [Entity Systems](http://entity-systems.wikidot.com/rdbms-with-code-in-systems)
 
-BO can be used to glue different parts within the application with behaviors.  
+BO can be used to glue different parts within the application with behaviors.
 
 It can help augment the Data Flow in javelin with
 
@@ -26,8 +26,10 @@ It can help augment the Data Flow in javelin with
   (rm [this object-name])
   (objects [this])
   (by-prop [this meta-info matcher])
-  (trigger [this behavior-name input])
-  (raise [this trigger-name input]))
+  (stack [this])
+  (set-stack! [this stack-object])
+  (raise [this behavior-name input])
+  (trigger [this input]))
 ```
 
 # Example
@@ -37,30 +39,30 @@ It can help augment the Data Flow in javelin with
   (:require [tailrecursion.bo :as bo]))
 
 (enable-console-print!)
-(let [test-bo (bo/BO. (atom {}))]
-  (bo/add test-bo :foo {:type :object :data 1 :behaviors [:specific]})
-  (bo/add test-bo :bar {:type :object :data 0 :behaviors [:specific]})
+(let [test-bo (bo/BO. (atom {}) (atom [:start]))]
+  (bo/add test-bo :foo {:type :object :data 1})
+  (bo/add test-bo :bar {:type :object :data 0})
   (bo/update-in! test-bo :bar [:data] 2)
   (println (bo/get-in-object test-bo :bar [:data]))
-  (bo/add test-bo :general {:type :behavior
-                            :action (fn [this input]
-                                      (println (str "Input : " input))
-                                      (println (str "Total Objects: " (count (bo/objects this)))))
+  (bo/add test-bo :start {:type :behavior
+                           :action (fn [this input]
+                               (let [stack-object (bo/stack this)
+                                     _ (bo/set-stack! this (conj stack-object :end))]
+                               (println (str "starting with " input))))
                             })
-
-  (bo/add test-bo :specific {:type :behavior
-                             :triggers [:some-transition]
-                             :action (fn [this input object-name] (println input object-name))
-                             })
-  (bo/trigger test-bo :general 42)
-  (bo/raise test-bo :some-transition "Do something with "))
-```
+  (bo/add test-bo :end {:type :behavior
+                        :action (fn [this input]
+                               (println (str "ending with " input)))
+                            })
+  (bo/trigger test-bo 0)
+  (bo/trigger test-bo 42))
 
 ```
-Input : 42
-Total Objects: 4
-Do something with  :foo
-Do something with  :bar
+
+```
+2
+starting with 0
+ending with 42
 ```
 
 # Testing

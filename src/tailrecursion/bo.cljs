@@ -9,10 +9,12 @@
   (rm [this object-name])
   (objects [this])
   (by-prop [this meta-info matcher])
-  (trigger [this behavior-name input])
-  (raise [this trigger-name input]))
+  (stack [this])
+  (set-stack! [this stack-object])
+  (raise [this behavior-name input])
+  (trigger [this input]))
 
-(deftype BO [->objects]
+(deftype BO [->objects ->stack]
   IBO
   (add [this object-name object-map]
     (if (contains? object-map :type)
@@ -63,22 +65,16 @@
                     (conj matches {:name object-name :value obj}))
             (recur (rest left-keys)
                     matches))))))
-  (trigger [this behavior-name input]
+  (stack [this] @->stack)
+  (set-stack! [this new-stack] (reset! ->stack new-stack))
+  (raise [this behavior-name input]
     (let [behavior (get (objects this) behavior-name)]
-      (if (= (get behavior :type) :behavior)
-        ((get behavior :action) this input))))
-  (raise [this trigger-name input]
-    (loop [left-keys (keys (objects this))]
-      (if (not (empty? left-keys))
-        (let [object-name (first left-keys)
-              object-map (get (objects this) object-name)]
-          (when (= (get object-map :type) :object)
-            (loop [behaviors (get object-map :behaviors)]
-              (when (not (empty? behaviors))
-                (let [behavior (get (objects this) (first behaviors))]
-                  (if (some #(= trigger-name %) (get behavior :triggers))
-                    ((get behavior :action) this input object-name)))
-                (recur (rest behaviors))))
-            (recur (rest left-keys))))))))
-
+            (if (= (get behavior :type) :behavior)
+              ((get behavior :action) this input))))
+  (trigger [this input]
+    (let [stack-object (stack this)
+          behavior-name (last stack-object)]
+      (when (not (nil? behavior-name))
+        (set-stack! this (pop stack-object))
+        (raise this behavior-name input)))))
 
