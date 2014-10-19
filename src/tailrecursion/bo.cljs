@@ -10,7 +10,9 @@
   (objects [this])
   (by-prop [this meta-info matcher])
   (stack [this])
-  (set-stack! [this stack-object])
+  (push! [this element])
+  (pull! [this])
+  (load! [this label])
   (raise [this behavior-name input])
   (trigger [this input]))
 
@@ -66,15 +68,18 @@
             (recur (rest left-keys)
                     matches))))))
   (stack [this] @->stack)
-  (set-stack! [this new-stack] (reset! ->stack new-stack))
+  (push! [this element] (reset! ->stack (assoc (stack this) :frame (conj (get (stack this) :frame) element))))
+  (pull! [this] (let [element (last (get (stack this) :frame))]
+                  (reset! ->stack (assoc (stack this) :frame (reverse (rest (reverse (get (stack this) :frame))))))
+                  element))
+  (load! [this label] (reset! ->stack (assoc (stack this) :pc label)))
   (raise [this behavior-name input]
     (let [behavior (get (objects this) behavior-name)]
             (if (= (get behavior :type) :behavior)
               ((get behavior :action) this input))))
   (trigger [this input]
     (let [stack-object (stack this)
-          behavior-name (last stack-object)]
+          behavior-name (get stack-object :pc)]
       (when (not (nil? behavior-name))
-        (set-stack! this (pop stack-object))
         (raise this behavior-name input)))))
 
