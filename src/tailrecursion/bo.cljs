@@ -13,7 +13,7 @@
   (push! [this element])
   (pull! [this])
   (load! [this label])
-  (raise [this behavior-name input])
+  (raise [this event-name input])
   (trigger [this input]))
 
 (deftype BO [->objects ->stack]
