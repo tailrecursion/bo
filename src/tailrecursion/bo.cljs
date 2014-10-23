@@ -73,13 +73,24 @@
                   (reset! ->stack (assoc (stack this) :frame (reverse (rest (reverse (get (stack this) :frame))))))
                   element))
   (load! [this label] (reset! ->stack (assoc (stack this) :pc label)))
-  (raise [this behavior-name input]
-    (let [behavior (get (objects this) behavior-name)]
-            (if (= (get behavior :type) :behavior)
-              ((get behavior :action) this input))))
+  (raise [this event-name input]
+    (loop [left-keys (keys (objects this))]
+      (if (not (empty? left-keys))
+        (let [object-name (first left-keys)
+              object-map (get (objects this) object-name)]
+          (when (= (get object-map :type) :object)
+            (loop [behaviors (get object-map :behaviors)]
+              (when (not (empty? behaviors))
+                (let [behavior (get (objects this) (first behaviors))]
+                  (if (some #(= event-name %) (get behavior :events))
+                    ((get behavior :action) this input object-name)))
+                (recur (rest behaviors))))
+            (recur (rest left-keys)))))))
   (trigger [this input]
     (let [stack-object (stack this)
-          behavior-name (get stack-object :pc)]
-      (when (not (nil? behavior-name))
-        (raise this behavior-name input)))))
+          transition-name (get stack-object :pc)]
+      (when (not (nil? transition-name))
+        (let [transition (get (objects this) transition-name)]
+          (if (= (get transition :type) :transition)
+            ((get transition :action) this input)))))))
 
