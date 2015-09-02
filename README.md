@@ -2,17 +2,15 @@
 
 A minimal implementation of LightTable's [BOT Architecture](http://www.chris-granger.com/2013/01/24/the-ide-as-data/).
 
-# Patterns
-
-* [Interceptor Pattern](https://en.wikipedia.org/wiki/Interceptor_pattern)
-* [Entity Systems](http://entity-systems.wikidot.com/rdbms-with-code-in-systems)
-
 BO can be used to glue different parts within the application with behaviors.
-
 It can help augment the Data Flow in javelin with
 
 * Data Store
 * Control Flow
+
+# See
+
+* [Entity Systems](http://entity-systems.wikidot.com/rdbms-with-code-in-systems)
 
 # Protocol
 
