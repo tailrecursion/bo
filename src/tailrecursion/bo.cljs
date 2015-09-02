@@ -9,14 +9,9 @@
   (rm [this object-name])
   (objects [this])
   (by-prop [this meta-info matcher])
-  (stack [this])
-  (push! [this element])
-  (pull! [this])
-  (load! [this label])
-  (raise [this event-name input])
-  (trigger [this input]))
+  (raise [this event-name input]))
 
-(deftype BO [->objects ->stack]
+(deftype BO [->objects]
   IBO
   (add [this object-name object-map]
     (if (contains? object-map :type)
@@ -67,12 +62,6 @@
                     (conj matches {:name object-name :value obj}))
             (recur (rest left-keys)
                     matches))))))
-  (stack [this] @->stack)
-  (push! [this element] (reset! ->stack (assoc (stack this) :frame (conj (get (stack this) :frame) element))))
-  (pull! [this] (let [element (last (get (stack this) :frame))]
-                  (reset! ->stack (assoc (stack this) :frame (reverse (rest (reverse (get (stack this) :frame))))))
-                  element))
-  (load! [this label] (reset! ->stack (assoc (stack this) :pc label)))
   (raise [this event-name input]
     (loop [left-keys (keys (objects this))]
       (if (not (empty? left-keys))
@@ -83,14 +72,7 @@
               (when (not (empty? behaviors))
                 (let [behavior (get (objects this) (first behaviors))]
                   (if (some #(= event-name %) (get behavior :events))
-                    ((get behavior :action) this input object-name)))
+                    ((get behavior :action) this event-name input object-name)))
                 (recur (rest behaviors))))
-            (recur (rest left-keys)))))))
-  (trigger [this input]
-    (let [stack-object (stack this)
-          transition-name (get stack-object :pc)]
-      (when (not (nil? transition-name))
-        (let [transition (get (objects this) transition-name)]
-          (if (= (get transition :type) :transition)
-            ((get transition :action) this input)))))))
+            (recur (rest left-keys))))))))
 
